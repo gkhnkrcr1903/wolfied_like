@@ -73,7 +73,7 @@
 
   let GW, GH, grid, lvIdx = 0, level, bg, enemies, sparx, player, particles = [], score = 0, lives = 3;
   let state = 'menu', levelTime = 0, coverAlpha = 1, pct = 0, interior = 1, invuln = 0, time = 0, cell = 4;
-  let customImg = null, unlocked = 1, powerups = [], puTimer = 0, fx = {}, toastT = null;
+  let customs = {}, unlocked = 1, powerups = [], puTimer = 0, fx = {}, toastT = null;
   const photos = {};
   try { unlocked = Math.max(1, parseInt(localStorage.getItem('drawandsee_unlocked')) || 1); } catch (e) {}
 
@@ -120,9 +120,10 @@
   }
   // Fotoğraf yüklenene kadar çizilmiş sahne gösterilir, sonra fotoğrafa geçilir.
   function makeBg() {
-    if (customImg) return coverFit(customImg);
+    const ci = customFor(lvIdx);
+    if (ci) return coverFit(ci.img);
     const i = lvIdx, gw = GW;
-    loadPhoto(LEVELS[i].img).then(im => { if (lvIdx === i && GW === gw && !customImg) bg = coverFit(im); }).catch(() => {});
+    loadPhoto(LEVELS[i].img).then(im => { if (lvIdx === i && GW === gw && !customFor(i)) bg = coverFit(im); }).catch(() => {});
     return Scenes.draw(i, GW * 8, GH * 8);
   }
 
@@ -759,7 +760,7 @@
     if (kind === 'win') {
       $('#ovTitle').textContent = last ? '🏆 Tüm bölümler tamamlandı!' : '🎉 Bölüm tamamlandı!';
       $('#ovStars').textContent = '★'.repeat(Math.min(3, lives)) + '☆'.repeat(Math.max(0, 3 - lives));
-      $('#ovText').textContent = `${level.name} manzarası ortaya çıktı! Puan: ${score.toLocaleString('tr-TR')}`;
+      $('#ovText').textContent = `${customFor(lvIdx) ? 'Resmin' : level.name + ' manzarası'} ortaya çıktı! Puan: ${score.toLocaleString('tr-TR')}`;
       $('#ovNext').hidden = last; $('#ovRetry').hidden = true;
     } else {
       $('#ovTitle').textContent = '💥 Oyun bitti';
@@ -778,31 +779,110 @@
   $('#menuBtn').onclick = goMenu;
   $('#playBtn').onclick = () => { score = 0; startLevel(Math.min(unlocked, LEVELS.length) - 1); };
 
+  // ---------- Kendi resimlerin ----------
+  // Resimler küçültülüp tarayıcının IndexedDB deposunda saklanır; anahtar bölüm numarası ya da 'all' (tüm bölümler).
+  const store = (() => {
+    let dbp = null;
+    const db = () => dbp || (dbp = new Promise((res, rej) => {
+      const r = indexedDB.open('drawandsee', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('bg');
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    }));
+    const tx = (mode, fn) => db().then(d => new Promise((res, rej) => {
+      const t = d.transaction('bg', mode), q = fn(t.objectStore('bg'));
+      t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error);
+    }));
+    return {
+      get: k => tx('readonly', st => st.get(k)), set: (k, v) => tx('readwrite', st => st.put(v, k)),
+      del: k => tx('readwrite', st => st.delete(k)), keys: () => tx('readonly', st => st.getAllKeys()),
+    };
+  })();
+  function customFor(i) { return customs[i] || customs.all || null; }
+  function blobToCustom(blob) {
+    return new Promise((res, rej) => {
+      const url = URL.createObjectURL(blob), img = new Image();
+      img.onload = () => res({ img, url }); img.onerror = rej; img.src = url;
+    });
+  }
+  function shrink(file) {
+    return blobToCustom(file).then(({ img, url }) => new Promise(res => {
+      const s = Math.min(1, 1600 / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      c.toBlob(b => res(b), 'image/jpeg', 0.86);
+    }));
+  }
+  async function setCustom(key, file) {
+    try {
+      const blob = await shrink(file);
+      if (customs[key]) URL.revokeObjectURL(customs[key].url);
+      customs[key] = await blobToCustom(blob);
+      store.set(key, blob).catch(() => toastMenu('Resim bu oturumda kullanılacak, ama kaydedilemedi.'));
+    } catch (e) { toastMenu('Bu resim açılamadı.'); }
+    refreshCustomUi();
+  }
+  function clearCustom(key) {
+    if (customs[key]) URL.revokeObjectURL(customs[key].url);
+    delete customs[key]; store.del(key).catch(() => {});
+    refreshCustomUi();
+  }
+  function toastMenu(msg) { alert(msg); }
+  function refreshCustomUi() {
+    const box = $('#customBox');
+    box.classList.toggle('has', !!customs.all);
+    if (customs.all) $('#bgPreview').src = customs.all.url;
+    buildMenu();
+  }
+  function pickFile(cb) {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+    inp.onchange = () => { if (inp.files[0]) cb(inp.files[0]); };
+    inp.click();
+  }
+
   function buildMenu() {
     const g = $('#levelGrid'); g.innerHTML = '';
     LEVELS.forEach((L, i) => {
-      const b = document.createElement('button'); b.className = 'lv' + (i >= unlocked ? ' locked' : '');
+      const locked = i >= unlocked, own = customs[i], ci = customFor(i);
+      const b = document.createElement('div'); b.className = 'lv' + (locked ? ' locked' : '') + (own ? ' own' : '');
+      b.tabIndex = 0; b.setAttribute('role', 'button');
       const im = new Image(); im.loading = 'lazy'; im.alt = '';
-      im.src = customImg ? customImg.src : `assets/bg/thumbs/${L.img}.jpg`;
+      im.src = ci ? ci.url : `assets/bg/thumbs/${L.img}.jpg`;
       b.appendChild(im);
-      const s = document.createElement('span'); s.textContent = i >= unlocked ? '🔒 ' + (i + 1) : `${i + 1}. ${L.name}`; b.appendChild(s);
-      b.onclick = () => { if (i < unlocked) { score = 0; startLevel(i); } };
+      const s = document.createElement('span'); s.textContent = locked ? '🔒 ' + (i + 1) : `${i + 1}. ${L.name}`; b.appendChild(s);
+      const tools = document.createElement('div'); tools.className = 'lvTools';
+      const pick = document.createElement('button'); pick.className = 'lvBtn'; pick.textContent = '📷';
+      pick.title = pick.ariaLabel = `${i + 1}. bölüme kendi resmini seç`;
+      pick.onclick = e => { e.stopPropagation(); pickFile(f => setCustom(i, f)); };
+      tools.appendChild(pick);
+      if (own) {
+        const rm = document.createElement('button'); rm.className = 'lvBtn'; rm.textContent = '✕';
+        rm.title = rm.ariaLabel = 'Orijinal fotoğrafa dön';
+        rm.onclick = e => { e.stopPropagation(); clearCustom(i); };
+        tools.appendChild(rm);
+      }
+      b.appendChild(tools);
+      const play = () => { if (!locked) { score = 0; startLevel(i); } };
+      b.onclick = play; b.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); play(); } };
       g.appendChild(b);
     });
   }
 
   $('#bgInput').addEventListener('change', e => {
-    const f = e.target.files[0]; if (!f) return;
-    const url = URL.createObjectURL(f), im = new Image();
-    im.onload = () => { customImg = im; $('#bgPreview').src = url; $('#customBox').classList.add('has'); buildMenu(); };
-    im.src = url;
+    const f = e.target.files[0]; if (f) setCustom('all', f);
     e.target.value = '';
   });
-  $('#bgClear').onclick = () => { customImg = null; $('#customBox').classList.remove('has'); buildMenu(); };
+  $('#bgClear').onclick = () => clearCustom('all');
+
+  // Kayıtlı resimleri geri yükle.
+  try {
+    store.keys().then(keys => Promise.all(keys.map(k => store.get(k).then(blobToCustom).then(c => { customs[k] = c; }).catch(() => {}))))
+      .then(refreshCustomUi).catch(() => {});
+  } catch (e) {}
 
   if (location.search.includes('debug')) window.dsDebug = {
     win: () => state === 'play' && win(),
     power: type => { spawnPowerup(); if (type && powerups.length) powerups[powerups.length - 1].type = type; return powerups.map(u => u.type); },
+    custom: (key, blob) => setCustom(key, blob),
     take: type => { const u = { x: player.x, y: player.y, type, life: 9 }; powerups.push(u); collect(u); },
   };
 

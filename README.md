@@ -18,7 +18,7 @@ Volfied tarzı bir bulmaca oyunu ve bir dünya turu. Ekranı çiz, böcekleri tu
   - 🐌 yavaşlatma
   - ❤️ +1 can
   - 💥 böcek ilacı
-- **Kendi resmin:** Menüden kendi resmini arkaplan yapabilirsin.
+- **Kendi resimlerin:** Her bölüme ayrı resim seçebilir (kartın üstündeki 📷) ya da tek resmi tüm bölümlere koyabilirsin. Resimler küçültülüp tarayıcının IndexedDB deposunda saklanır, sayfa yenilense de kalır; sunucuya yüklenmez.
 - **Kontroller:** Klavye (ok tuşları / WASD), kaydırma ve dokunmatik yön tuşları. Telefon, tablet ve masaüstüne uyumlu.
 
 ## Fotoğraflar
