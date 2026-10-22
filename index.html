@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0a0c1f">
+<meta name="description" content="Draw and See: Ekranı çizerek aç, böcekleri yakala, gizli resmi ortaya çıkar.">
+<title>Draw and See</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <section id="menu" class="screen active">
+    <div class="menu-inner">
+      <h1>Draw <span>&amp;</span> See</h1>
+      <p class="tag">Ekranı çiz, böcekleri tuzağa düşür, gizli resmi ortaya çıkar!</p>
+      <button id="playBtn" class="btn primary">▶ Oyna</button>
+      <div id="levelGrid"></div>
+      <div id="customBox" class="custom">
+        <label class="btn">📷 Kendi resmini arkaplan yap
+          <input type="file" accept="image/*" id="bgInput" hidden>
+        </label>
+        <img id="bgPreview" alt="">
+        <button id="bgClear" class="btn small">Kaldır</button>
+      </div>
+      <details class="help">
+        <summary>Nasıl oynanır?</summary>
+        <ul>
+          <li>Kenarda dolaş, boş alana girerek çizgi çek ve tekrar kenara dön: kapattığın alan açılır.</li>
+          <li>Böcekler çizgine ya da sana dokunursa can kaybedersin. Pembe kıvılcımlar kenarda devriye gezer.</li>
+          <li>Böcekleri küçük bir alana hapsederek yok et! Hedef yüzdeye ulaş ya da tüm böcekleri yok et.</li>
+          <li>Klavye: Ok tuşları / WASD. Dokunmatik: kaydır (dokununca durur) ya da yön tuşları.</li>
+        </ul>
+      </details>
+      <footer class="credit">İletişim: <a href="mailto:gkhnkrcr1903@gmail.com">gkhnkrcr1903@gmail.com</a></footer>
+    </div>
+  </section>
+
+  <section id="game" class="screen">
+    <header id="hud">
+      <button id="menuBtn" class="btn small" aria-label="Menü">☰</button>
+      <div class="hud-main">
+        <div class="hud-row"><span id="hudLevel"></span><span id="hudPct"></span></div>
+        <div class="progress"><div id="bar"></div></div>
+      </div>
+      <div class="hud-side"><span id="hudLives"></span><span id="hudBugs"></span><span id="hudScore"></span></div>
+    </header>
+    <div id="stage"><canvas id="cv"></canvas></div>
+    <div id="dpad">
+      <button data-d="0,-1" class="up" aria-label="Yukarı">▲</button>
+      <button data-d="-1,0" class="left" aria-label="Sol">◀</button>
+      <button data-d="1,0" class="right" aria-label="Sağ">▶</button>
+      <button data-d="0,1" class="down" aria-label="Aşağı">▼</button>
+    </div>
+    <div id="overlay" hidden>
+      <div class="card">
+        <h2 id="ovTitle"></h2>
+        <div id="ovStars"></div>
+        <p id="ovText"></p>
+        <div class="row">
+          <button id="ovNext" class="btn primary">Sonraki bölüm ▶</button>
+          <button id="ovRetry" class="btn primary">Tekrar dene</button>
+          <button id="ovMenu" class="btn">Menü</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<script src="js/scenes.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
