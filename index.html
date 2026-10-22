@@ -13,7 +13,7 @@
   <section id="menu" class="screen active">
     <div class="menu-inner">
       <h1>Draw <span>&amp;</span> See</h1>
-      <p class="tag">Ekranı çiz, böcekleri tuzağa düşür, gizli resmi ortaya çıkar!</p>
+      <p class="tag">Dünya turuna çık: ekranı çiz, böcekleri tuzağa düşür, 20 harika manzarayı ortaya çıkar!</p>
       <button id="playBtn" class="btn primary">▶ Oyna</button>
       <div id="levelGrid"></div>
       <div id="customBox" class="custom">
@@ -30,7 +30,14 @@
           <li>Böcekler çizgine ya da sana dokunursa can kaybedersin. Pembe kıvılcımlar kenarda devriye gezer.</li>
           <li>Böcekleri küçük bir alana hapsederek yok et! Hedef yüzdeye ulaş ya da tüm böcekleri yok et.</li>
           <li>Klavye: Ok tuşları / WASD. Dokunmatik: kaydır (dokununca durur) ya da yön tuşları.</li>
+          <li><b>Ödüller:</b> Üzerinden geç ya da alanın içine hapset. ⚡ hızlı çizim · ❄️ böcekleri dondur · 🛡️ kalkan · 🐌 yavaşlat · ❤️ +1 can · 💥 en yakın böceği yok et.</li>
+          <li><b>Böcekler:</b> 🐞 uğur böceği · 🪲 yanardöner bokböceği · 🐝 zikzak çizen eşek arısı · geyik böceği (iri, boynuzlu) · ateş böceği (aniden atılır) · 🕷️ örümcek (çizerken seni kovalar) · 👑 patronlar.</li>
         </ul>
+      </details>
+      <details class="help">
+        <summary>Fotoğraf künyesi</summary>
+        <p>Arkaplan fotoğrafları Wikimedia Commons'tan, belirtilen özgür lisanslarla kullanılmıştır.</p>
+        <ol id="creditList" class="credits"></ol>
       </details>
       <footer class="credit">İletişim: <a href="mailto:gkhnkrcr1903@gmail.com">gkhnkrcr1903@gmail.com</a></footer>
     </div>
@@ -43,9 +50,9 @@
         <div class="hud-row"><span id="hudLevel"></span><span id="hudPct"></span></div>
         <div class="progress"><div id="bar"></div></div>
       </div>
-      <div class="hud-side"><span id="hudLives"></span><span id="hudBugs"></span><span id="hudScore"></span></div>
+      <div class="hud-side"><span id="hudFx"></span><span id="hudLives"></span><span id="hudBugs"></span><span id="hudScore"></span></div>
     </header>
-    <div id="stage"><canvas id="cv"></canvas></div>
+    <div id="stage"><canvas id="cv"></canvas><div id="toast"></div></div>
     <div id="dpad">
       <button data-d="0,-1" class="up" aria-label="Yukarı">▲</button>
       <button data-d="-1,0" class="left" aria-label="Sol">◀</button>

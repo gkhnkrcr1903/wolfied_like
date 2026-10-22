@@ -49,7 +49,15 @@ h1 span { color: #ffd166; -webkit-text-fill-color: #ffd166; }
 #hudScore { color: #ffd166; font-weight: 700; min-width: 48px; text-align: right; }
 @media (max-width: 560px) { .hud-side { flex-direction: column; gap: 0; font-size: 12px; align-items: flex-end; } }
 
-#stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 8px; touch-action: none; min-height: 0; }
+#hudFx { color: #ffd166; font-weight: 700; }
+.credits { padding-left: 18px; font-size: 12px; opacity: .85; }
+.credits li { margin: 4px 0; overflow-wrap: anywhere; }
+.credits a { color: var(--accent); }
+#toast { position: absolute; left: 50%; top: 18%; transform: translate(-50%, 0) scale(.6); opacity: 0; pointer-events: none;
+  background: rgba(10,12,31,0.85); border: 1px solid rgba(255,255,255,0.25); padding: 10px 20px; border-radius: 999px;
+  font-size: clamp(16px, 3.5vw, 24px); font-weight: 800; white-space: nowrap; transition: transform .25s cubic-bezier(.2,1.6,.4,1), opacity .25s; }
+#toast.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+#stage { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; padding: 8px; touch-action: none; min-height: 0; }
 #cv { border-radius: 8px; box-shadow: 0 0 0 2px rgba(125,249,255,0.3), 0 10px 40px rgba(0,0,0,0.6); }
 
 #dpad { display: none; position: fixed; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); width: 150px; height: 150px; opacity: .6; touch-action: none; }
@@ -62,7 +70,7 @@ h1 span { color: #ffd166; -webkit-text-fill-color: #ffd166; }
   #dpad { position: relative; right: auto; bottom: auto; flex: none; margin: 0 auto max(10px, env(safe-area-inset-bottom)); opacity: .85; }
 }
 
-#overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(5,6,20,0.45); padding: 16px; }
+#overlay { position: fixed; inset: 0; display: flex; align-items: flex-end; justify-content: center; background: linear-gradient(transparent 55%, rgba(5,6,20,0.6)); padding: 16px; padding-bottom: max(24px, env(safe-area-inset-bottom)); }
 #overlay[hidden] { display: none; }
 .card { background: var(--panel); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px;
   padding: 24px; text-align: center; max-width: 420px; width: 100%; animation: pop .45s cubic-bezier(.2,1.6,.4,1); }

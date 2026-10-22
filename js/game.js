@@ -2,41 +2,63 @@
   const FREE = 0, CLAIM = 1, TRAIL = 2;
   const $ = s => document.querySelector(s);
 
-  const BUGS = [
-    { body: ['#ff6b5e', '#b5160c'], head: '#1b1b1b', spots: '#141414', leg: '#1b1b1b' },
-    { body: ['#8dffa0', '#0d7a3c'], head: '#0a3d20', stripe: '#e8ff9a', leg: '#0a3d20' },
-    { body: ['#ffe14d', '#d99a00'], head: '#222', bands: '#222', leg: '#222' },
-    { body: ['#8fd8ff', '#1747a6'], head: '#0b1f4d', spots: '#e8f6ff', leg: '#0b1f4d' },
-    { body: ['#e0a3ff', '#6a1fa6'], head: '#2e0a4d', stripe: '#ffd6ff', leg: '#2e0a4d' },
-    { body: ['#ffb36b', '#c2410c'], head: '#3a0f00', spots: '#3a0f00', leg: '#3a0f00' },
-    { body: ['#c8fff4', '#14b8a6'], head: '#064e47', spots: '#ffffff', leg: '#064e47' },
-    { body: ['#fff0a0', '#b8860b'], head: '#4a2c00', stripe: '#ff4d4d', leg: '#4a2c00' },
-    { body: ['#f2f7ff', '#7b93b8'], head: '#1c2638', spots: '#2b3a55', leg: '#1c2638' },
-    { body: ['#ff8fd0', '#b0127a'], head: '#3d0029', bands: '#3d0029', leg: '#3d0029' },
-  ];
-  // Kolaydan zora: böcek sayısı, hız, kenar kıvılcımı (sparx) ve hedef yüzde artıyor.
+  const BUGS = {
+    lady: { body: ['#ff6b5e', '#b5160c'], head: '#1b1b1b', spots: '#141414', leg: '#1b1b1b' },
+    scarab: { body: ['#8dffa0', '#0d7a3c'], head: '#0a3d20', stripe: '#e8ff9a', leg: '#0a3d20', irid: true },
+    blue: { body: ['#8fd8ff', '#1747a6'], head: '#0b1f4d', spots: '#e8f6ff', leg: '#0b1f4d' },
+    wasp: { body: ['#ffe14d', '#d99a00'], head: '#222', bands: '#1a1a1a', leg: '#222' },
+    stag: { body: ['#a0522d', '#3b1a08'], head: '#2a1205', leg: '#1a0a02', horns: '#5a2a0a' },
+    firefly: { body: ['#5a5f7a', '#1c1f30'], head: '#ff7a3d', stripe: '#ffb08a', leg: '#14161f', glow: '#d8ff5a' },
+    spider: { body: ['#6b5a8a', '#1e1530'], head: '#2a1f40', leg: '#1a1228', marks: '#ff4d6d' },
+    kingstag: { body: ['#ffe27a', '#8a5a00'], head: '#4a2c00', leg: '#2a1800', horns: '#c08a10', stripe: '#ff4d4d' },
+    queen: { body: ['#ff9de0', '#a0106a'], head: '#3d0029', bands: '#3d0029', leg: '#3d0029' },
+    tarantula: { body: ['#ff8a3d', '#5a1a00'], head: '#3a1000', leg: '#2a0a00', marks: '#ffe14d' },
+  };
+  // Tür başına: çizim şekli, boyut, hız çarpanı ve davranış.
+  const KINDS = {
+    lady: { shape: 'beetle', r: 3.2, sp: 1 },
+    blue: { shape: 'beetle', r: 3.2, sp: 1.05 },
+    scarab: { shape: 'beetle', r: 3.4, sp: 0.95 },
+    wasp: { shape: 'beetle', r: 3, sp: 1.25, move: 'zigzag' },
+    stag: { shape: 'beetle', r: 4.2, sp: 0.75 },
+    firefly: { shape: 'beetle', r: 3, sp: 0.9, move: 'dash' },
+    spider: { shape: 'spider', r: 3.4, sp: 0.85, move: 'chase' },
+    kingstag: { shape: 'beetle', r: 6.2, sp: 0.7, boss: true },
+    queen: { shape: 'beetle', r: 5.5, sp: 0.9, move: 'zigzag', boss: true },
+    tarantula: { shape: 'spider', r: 6.2, sp: 0.7, move: 'chase', boss: true },
+  };
+  // Dünya turu: kolaydan zora; böcek sayısı/çeşidi, hız, kenar kıvılcımı (sparx) ve hedef yüzde artıyor.
   const LEVELS = [
-    { name: 'Gün Batımı Vadisi', bugs: 1, speed: 13, sparx: 0, target: 72, styles: [0] },
-    { name: 'Mercan Resifi', bugs: 2, speed: 15, sparx: 0, target: 74, styles: [3, 6] },
-    { name: 'Sakura Bahçesi', bugs: 2, speed: 17, sparx: 1, target: 75, styles: [0, 4] },
-    { name: 'Kuzey Işıkları', bugs: 3, speed: 18, sparx: 1, target: 76, styles: [1, 3] },
-    { name: 'Çöl Piramitleri', bugs: 3, speed: 20, sparx: 1, target: 77, styles: [2, 5] },
-    { name: 'Neon Şehir', bugs: 3, speed: 22, sparx: 2, target: 78, styles: [4, 6] },
-    { name: 'Büyülü Orman', bugs: 4, speed: 23, sparx: 2, target: 79, styles: [1, 2] },
-    { name: 'Uzay Nebulası', bugs: 4, speed: 25, sparx: 2, target: 80, styles: [3, 4, 6] },
-    { name: 'Volkan Adası', bugs: 5, speed: 26, sparx: 3, target: 81, styles: [5, 0, 2] },
-    { name: 'Kristal Mağara', bugs: 3, speed: 27, sparx: 3, target: 82, styles: [6, 4], boss: true },
-    { name: 'Karlı Köy', bugs: 4, speed: 27, sparx: 3, target: 82, styles: [8, 3] },
-    { name: 'Lavanta Tarlası', bugs: 5, speed: 28, sparx: 3, target: 83, styles: [4, 9] },
-    { name: 'Gökkuşağı Şelalesi', bugs: 5, speed: 29, sparx: 3, target: 83, styles: [2, 6, 8] },
-    { name: 'Ay Işığında Göl', bugs: 5, speed: 30, sparx: 4, target: 84, styles: [3, 1] },
-    { name: 'Bulut Kalesi', bugs: 4, speed: 30, sparx: 4, target: 84, styles: [9, 4], boss: true },
-    { name: 'Sonbahar Ormanı', bugs: 6, speed: 31, sparx: 4, target: 85, styles: [5, 0, 2] },
-    { name: 'Buzul Denizi', bugs: 6, speed: 32, sparx: 4, target: 85, styles: [8, 6] },
-    { name: 'Tropik Ada', bugs: 6, speed: 33, sparx: 5, target: 86, styles: [1, 2, 9] },
-    { name: 'Galaksi Girdabı', bugs: 7, speed: 34, sparx: 5, target: 87, styles: [4, 3, 6] },
-    { name: 'Altın Tapınak', bugs: 5, speed: 35, sparx: 5, target: 88, styles: [5, 2, 0], boss: true },
+    { name: 'Kapadokya', img: '01-kapadokya', bugs: ['lady'], speed: 13, sparx: 0, target: 72 },
+    { name: 'Santorini', img: '02-santorini', bugs: ['lady', 'blue'], speed: 15, sparx: 0, target: 74 },
+    { name: 'Venedik', img: '03-venedik', bugs: ['lady', 'scarab'], speed: 16, sparx: 1, target: 75 },
+    { name: 'Paris', img: '04-paris', bugs: ['blue', 'firefly', 'lady'], speed: 17, sparx: 1, target: 76 },
+    { name: 'Kyoto', img: '05-kyoto', bugs: ['wasp', 'lady', 'scarab'], speed: 19, sparx: 1, target: 77 },
+    { name: 'İstanbul', img: '06-istanbul', bugs: ['stag', 'blue', 'firefly'], speed: 20, sparx: 2, target: 78 },
+    { name: 'Pamukkale', img: '07-pamukkale', bugs: ['wasp', 'wasp', 'scarab', 'lady'], speed: 21, sparx: 2, target: 79 },
+    { name: 'Gize Piramitleri', img: '08-giza', bugs: ['spider', 'stag', 'firefly', 'lady'], speed: 22, sparx: 2, target: 80 },
+    { name: 'Tac Mahal', img: '09-taj-mahal', bugs: ['scarab', 'wasp', 'spider', 'blue', 'firefly'], speed: 24, sparx: 3, target: 80 },
+    { name: 'Machu Picchu', img: '10-machu-picchu', bugs: ['kingstag', 'wasp', 'spider'], speed: 25, sparx: 3, target: 81 },
+    { name: 'Petra', img: '11-petra', bugs: ['spider', 'stag', 'scarab', 'firefly'], speed: 26, sparx: 3, target: 82 },
+    { name: 'Çin Seddi', img: '12-cin-seddi', bugs: ['wasp', 'wasp', 'spider', 'lady', 'blue'], speed: 27, sparx: 3, target: 82 },
+    { name: 'Büyük Kanyon', img: '13-grand-canyon', bugs: ['stag', 'spider', 'firefly', 'scarab', 'wasp'], speed: 28, sparx: 3, target: 83 },
+    { name: 'Rio de Janeiro', img: '14-rio', bugs: ['wasp', 'firefly', 'firefly', 'spider', 'blue'], speed: 29, sparx: 4, target: 83 },
+    { name: 'Neuschwanstein', img: '15-neuschwanstein', bugs: ['queen', 'wasp', 'firefly', 'spider'], speed: 29, sparx: 4, target: 84 },
+    { name: 'Angkor Wat', img: '16-angkor', bugs: ['spider', 'spider', 'stag', 'wasp', 'scarab', 'lady'], speed: 30, sparx: 4, target: 85 },
+    { name: 'New York', img: '17-new-york', bugs: ['firefly', 'firefly', 'firefly', 'wasp', 'spider', 'stag'], speed: 31, sparx: 4, target: 85 },
+    { name: 'Maldivler', img: '18-maldivler', bugs: ['blue', 'wasp', 'spider', 'scarab', 'stag', 'firefly'], speed: 32, sparx: 5, target: 86 },
+    { name: 'İzlanda', img: '19-izlanda', bugs: ['firefly', 'firefly', 'spider', 'spider', 'wasp', 'wasp', 'stag'], speed: 33, sparx: 5, target: 87 },
+    { name: 'Everest', img: '20-everest', bugs: ['tarantula', 'kingstag', 'wasp', 'spider', 'firefly'], speed: 34, sparx: 5, target: 88 },
   ];
+  // Ödüller: kapatılan alanın içinde kalınca ya da üzerinden geçince toplanır.
+  const POWERS = {
+    speed: { icon: '⚡', color: '#ffd166', label: 'Hızlı çizim!', dur: 8, w: 3 },
+    freeze: { icon: '❄️', color: '#7df9ff', label: 'Böcekler dondu!', dur: 5, w: 3 },
+    shield: { icon: '🛡️', color: '#b388ff', label: 'Kalkan!', dur: 6, w: 2 },
+    slow: { icon: '🐌', color: '#06d6a0', label: 'Böcekler yavaşladı!', dur: 8, w: 2 },
+    life: { icon: '❤️', color: '#ff5c8a', label: '+1 can!', dur: 0, w: 1 },
+    bomb: { icon: '💥', color: '#ff9f43', label: 'Böcek ilacı!', dur: 0, w: 1 },
+  };
 
   const cv = $('#cv'), ctx = cv.getContext('2d');
   const coverCv = document.createElement('canvas'), cctx = coverCv.getContext('2d');
@@ -51,7 +73,8 @@
 
   let GW, GH, grid, lvIdx = 0, level, bg, enemies, sparx, player, particles = [], score = 0, lives = 3;
   let state = 'menu', levelTime = 0, coverAlpha = 1, pct = 0, interior = 1, invuln = 0, time = 0, cell = 4;
-  let customImg = null, unlocked = 1;
+  let customImg = null, unlocked = 1, powerups = [], puTimer = 0, fx = {}, toastT = null;
+  const photos = {};
   try { unlocked = Math.max(1, parseInt(localStorage.getItem('drawandsee_unlocked')) || 1); } catch (e) {}
 
   // ---------- Ses ----------
@@ -59,7 +82,7 @@
   function sfx(type) {
     try {
       ac = ac || new (window.AudioContext || window.webkitAudioContext)();
-      const notes = { fill: [523, 784], kill: [880, 1320], die: [300, 120], win: [523, 659, 784, 1047], step: [0] }[type];
+      const notes = { fill: [523, 784], kill: [880, 1320], die: [300, 120], win: [523, 659, 784, 1047], power: [660, 990, 1320] }[type];
       notes.forEach((f, i) => {
         if (!f) return;
         const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + i * 0.09;
@@ -82,13 +105,25 @@
     return false;
   }
 
-  function makeBg() {
+  function coverFit(img) {
     const W = GW * 8, H = GH * 8;
-    if (!customImg) return Scenes.draw(lvIdx, W, H);
     const c = document.createElement('canvas'); c.width = W; c.height = H;
-    const g = c.getContext('2d'), s = Math.max(W / customImg.width, H / customImg.height);
-    g.drawImage(customImg, (W - customImg.width * s) / 2, (H - customImg.height * s) / 2, customImg.width * s, customImg.height * s);
+    const g = c.getContext('2d'), s = Math.max(W / img.width, H / img.height);
+    g.drawImage(img, (W - img.width * s) / 2, (H - img.height * s) / 2, img.width * s, img.height * s);
     return c;
+  }
+  function loadPhoto(name) {
+    if (!photos[name]) photos[name] = new Promise((res, rej) => {
+      const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = `assets/bg/${name}.jpg`;
+    });
+    return photos[name];
+  }
+  // Fotoğraf yüklenene kadar çizilmiş sahne gösterilir, sonra fotoğrafa geçilir.
+  function makeBg() {
+    if (customImg) return coverFit(customImg);
+    const i = lvIdx, gw = GW;
+    loadPhoto(LEVELS[i].img).then(im => { if (lvIdx === i && GW === gw && !customImg) bg = coverFit(im); }).catch(() => {});
+    return Scenes.draw(i, GW * 8, GH * 8);
   }
 
   // ---------- Bölüm başlatma ----------
@@ -104,16 +139,15 @@
     bg = makeBg();
     player = { x: GW >> 1, y: GH - 1, drawing: false, trail: [], sx: 0, sy: 0, acc: 0 };
     enemies = []; sparx = []; particles = [];
-    const n = level.bugs;
-    for (let k = 0; k < n; k++) {
-      const boss = level.boss && k === 0;
-      const r = boss ? 6 : 3.2;
-      const a = Math.random() * Math.PI * 2, sp = level.speed * (boss ? 0.75 : 0.85 + Math.random() * 0.3);
+    for (const kind of level.bugs) {
+      const K = KINDS[kind], r = K.r;
+      const a = Math.random() * Math.PI * 2, sp = level.speed * K.sp * (K.boss ? 1 : 0.9 + Math.random() * 0.2);
       enemies.push({
         x: r + 2 + Math.random() * (GW - 2 * r - 4), y: r + 2 + Math.random() * (GH * 0.6 - 2 * r),
-        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r, boss, style: BUGS[boss ? 7 : level.styles[k % level.styles.length]], ph: Math.random() * 9
+        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r, kind, K, boss: !!K.boss, style: BUGS[kind], ph: Math.random() * 9, dash: 0, dashT: 2 + Math.random() * 3
       });
     }
+    powerups = []; puTimer = 5; fx = { speed: 0, freeze: 0, shield: 0, slow: 0 };
     for (let k = 0; k < level.sparx; k++) {
       const x = Math.floor(GW * (k + 1) / (level.sparx + 1));
       sparx.push({ x, y: 0, px: x - 1, py: 0, acc: 0 });
@@ -194,6 +228,7 @@
       else { burst(e.x * cell, e.y * cell, e.style.body[0], 40); score += e.boss ? 2000 : 500; sfx('kill'); }
     });
     enemies = alive;
+    for (const u of powerups.slice()) if (grid[I(u.x, u.y)] === CLAIM) collect(u);
     sfx('fill');
     rebuildCover();
     updateHud();
@@ -201,7 +236,7 @@
   }
 
   function die() {
-    if (invuln > 0 || state !== 'play') return;
+    if (invuln > 0 || fx.shield > 0 || state !== 'play') return;
     const p = player;
     burst(p.x * cell, p.y * cell, '#ffffff', 50); sfx('die');
     for (const i of p.trail) grid[i] = FREE;
@@ -216,7 +251,7 @@
     for (let i = 0; i < grid.length; i++) grid[i] = CLAIM;
     pct = 100;
     enemies.forEach(e => burst(e.x * cell, e.y * cell, e.style.body[0], 30));
-    enemies = []; sparx = [];
+    enemies = []; sparx = []; powerups = []; fx = { speed: 0, freeze: 0, shield: 0, slow: 0 };
     score += lives * 1000;
     if (lvIdx + 2 > unlocked) { unlocked = Math.min(LEVELS.length, lvIdx + 2); try { localStorage.setItem('drawandsee_unlocked', unlocked); } catch (e) {} }
     sfx('win'); confetti(); updateHud();
@@ -226,27 +261,87 @@
   // ---------- Güncelleme ----------
   function blocked(x, y) { const ix = Math.floor(x), iy = Math.floor(y); return !inb(ix, iy) || grid[I(ix, iy)] === CLAIM; }
 
+  // ---------- Ödüller ----------
+  function spawnPowerup() {
+    const free = [];
+    for (let t = 0; t < 200 && !free.length; t++) {
+      const x = 3 + (Math.random() * (GW - 6) | 0), y = 3 + (Math.random() * (GH - 6) | 0);
+      if (grid[I(x, y)] === FREE && enemies.every(e => (e.x - x) ** 2 + (e.y - y) ** 2 > 64)) free.push([x, y]);
+    }
+    if (!free.length) return;
+    const pool = Object.keys(POWERS).filter(k => (k !== 'life' || lives < 5) && (k !== 'bomb' || enemies.some(e => !e.boss)));
+    let sum = pool.reduce((a, k) => a + POWERS[k].w, 0), r = Math.random() * sum, type = pool[0];
+    for (const k of pool) { r -= POWERS[k].w; if (r <= 0) { type = k; break; } }
+    powerups.push({ x: free[0][0], y: free[0][1], type, life: 14 });
+  }
+  function collect(u) {
+    powerups.splice(powerups.indexOf(u), 1);
+    const P = POWERS[u.type];
+    burst((u.x + 0.5) * cell, (u.y + 0.5) * cell, P.color, 30); sfx('power');
+    if (P.dur) fx[u.type] = P.dur;
+    if (u.type === 'life') lives = Math.min(5, lives + 1);
+    if (u.type === 'bomb') {
+      const targets = enemies.filter(e => !e.boss);
+      if (targets.length) {
+        const e = targets.reduce((a, b) => ((b.x - player.x) ** 2 + (b.y - player.y) ** 2 < (a.x - player.x) ** 2 + (a.y - player.y) ** 2 ? b : a));
+        enemies.splice(enemies.indexOf(e), 1); burst(e.x * cell, e.y * cell, e.style.body[0], 40); score += 500; sfx('kill');
+      }
+    }
+    score += 150; toast(P.icon + ' ' + P.label); updateHud();
+    if (enemies.length === 0 && state === 'play') win();
+  }
+  function toast(msg) {
+    const t = $('#toast'); t.textContent = msg; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1600);
+  }
+
   function update(dt) {
     time += dt; levelTime += dt;
     if (invuln > 0) invuln -= dt;
+    for (const k in fx) if (fx[k] > 0) fx[k] = Math.max(0, fx[k] - dt);
     const d = currentDir();
     const p = player;
     if (d) {
       p.acc += dt;
-      const step = 1 / 24;
+      const step = fx.speed > 0 ? 1 / 40 : 1 / 24;
       while (p.acc >= step) { p.acc -= step; tryMove(d[0], d[1]); if (state !== 'play') return; }
     } else p.acc = 0;
 
+    puTimer -= dt;
+    if (puTimer <= 0) { if (powerups.length < 2) spawnPowerup(); puTimer = 8 + Math.random() * 6; }
+    for (const u of powerups.slice()) {
+      u.life -= dt;
+      if (u.life <= 0) { powerups.splice(powerups.indexOf(u), 1); continue; }
+      if (Math.abs(u.x - p.x) <= 2 && Math.abs(u.y - p.y) <= 2) { collect(u); if (state !== 'play') return; }
+    }
+
+    const frozen = fx.freeze > 0, slowF = fx.slow > 0 ? 0.5 : 1;
     for (const e of enemies) {
-      if (Math.random() < dt * 0.6) {
-        const a = Math.atan2(e.vy, e.vx) + (Math.random() - 0.5) * 1.2, sp = Math.hypot(e.vx, e.vy);
-        e.vx = Math.cos(a) * sp; e.vy = Math.sin(a) * sp;
+      if (frozen) continue;
+      const K = e.K, sp = Math.hypot(e.vx, e.vy);
+      let a = Math.atan2(e.vy, e.vx);
+      if (K.move === 'chase' && p.drawing) {
+        // Örümcek: çizim yaparken oyuncuya doğru yavaşça döner.
+        const want = Math.atan2(p.y + 0.5 - e.y, p.x + 0.5 - e.x);
+        let da = want - a; while (da > Math.PI) da -= Math.PI * 2; while (da < -Math.PI) da += Math.PI * 2;
+        a += Math.max(-1, Math.min(1, da)) * dt * 1.4;
+      } else if (Math.random() < dt * 0.6) a += (Math.random() - 0.5) * 1.2;
+      e.vx = Math.cos(a) * sp; e.vy = Math.sin(a) * sp;
+      let mul = (1 + Math.min(0.5, levelTime * 0.008)) * slowF;
+      if (K.move === 'dash') {
+        // Ateş böceği: arada bir parlayıp hızla atılır.
+        e.dashT -= dt;
+        if (e.dashT <= 0) { e.dash = 0.6; e.dashT = 3 + Math.random() * 3; }
+        if (e.dash > 0) { e.dash -= dt; mul *= 2.3; }
       }
-      const ramp = 1 + Math.min(0.5, levelTime * 0.008);
-      const R = e.r * 0.8, nx = e.x + e.vx * dt * ramp, ny = e.y + e.vy * dt * ramp;
-      if (blocked(nx + Math.sign(e.vx) * R, e.y)) e.vx *= -1; else e.x = nx;
-      if (blocked(e.x, ny + Math.sign(e.vy) * R)) e.vy *= -1; else e.y = ny;
-      if (p.drawing && invuln <= 0) {
+      let mvx = e.vx, mvy = e.vy;
+      if (K.move === 'zigzag') { const w = Math.sin(time * 7 + e.ph) * 0.9, c = Math.cos(w), s = Math.sin(w); mvx = e.vx * c - e.vy * s; mvy = e.vx * s + e.vy * c; }
+      const R = e.r * 0.8, nx = e.x + mvx * dt * mul, ny = e.y + mvy * dt * mul;
+      if (blocked(nx + Math.sign(mvx) * R, e.y)) e.vx *= -1; else e.x = nx;
+      if (blocked(e.x, ny + Math.sign(mvy) * R)) e.vy *= -1; else e.y = ny;
+    }
+    for (const e of enemies) {
+      if (p.drawing && invuln <= 0 && fx.shield <= 0) {
         const rr = e.r * e.r;
         if ((p.x + 0.5 - e.x) ** 2 + (p.y + 0.5 - e.y) ** 2 < rr) { die(); return; }
         for (const i of p.trail) {
@@ -257,10 +352,10 @@
     }
 
     for (const s of sparx) {
-      s.acc += dt;
+      if (!frozen) s.acc += dt * slowF;
       const step = 1 / (10 + lvIdx * 0.9);
       while (s.acc >= step) { s.acc -= step; sparxStep(s); }
-      if (!p.drawing && invuln <= 0 && Math.abs(s.x - p.x) <= 1 && Math.abs(s.y - p.y) <= 1) { die(); return; }
+      if (!p.drawing && invuln <= 0 && fx.shield <= 0 && Math.abs(s.x - p.x) <= 1 && Math.abs(s.y - p.y) <= 1) { die(); return; }
     }
   }
 
@@ -346,6 +441,19 @@
       ctx.beginPath(); ctx.moveTo(R * 1.0, side * R * 0.12); ctx.quadraticCurveTo(p1x, p1y, p2x, p2y); ctx.stroke();
       ctx.fillStyle = dark; ctx.beginPath(); ctx.ellipse(p2x, p2y, R * 0.11, R * 0.07, side * 0.6, 0, 7); ctx.fill();
     }
+    // geyik böceği boynuzları (çatallı çeneler)
+    if (st.horns) {
+      for (const side of [-1, 1]) {
+        const hgr = ctx.createLinearGradient(R, 0, R * 2.2, 0);
+        hgr.addColorStop(0, st.horns); hgr.addColorStop(1, shade(st.horns, 0.4));
+        ctx.fillStyle = hgr; ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = Math.max(1, R * 0.03);
+        ctx.beginPath(); ctx.moveTo(R * 1.0, side * R * 0.18);
+        ctx.quadraticCurveTo(R * 1.6, side * R * 0.75, R * 2.15, side * R * 0.2);
+        ctx.lineTo(R * 2.0, side * R * 0.12); ctx.lineTo(R * 1.9, side * R * 0.32);
+        ctx.quadraticCurveTo(R * 1.55, side * R * 0.45, R * 1.05, side * R * 0.05); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(R * 1.55, side * R * 0.48); ctx.lineTo(R * 1.6, side * R * 0.25); ctx.lineTo(R * 1.68, side * R * 0.44); ctx.fill();
+      }
+    }
     // baş
     const hg = ctx.createRadialGradient(R * 0.9, -R * 0.12, R * 0.05, R * 0.85, 0, R * 0.4);
     hg.addColorStop(0, shade(st.head, 0.35)); hg.addColorStop(1, st.head);
@@ -394,6 +502,23 @@
     ctx.fillStyle = 'rgba(255,255,255,0.9)';
     ctx.beginPath(); ctx.ellipse(ex + R * 0.3, -R * 0.45, R * 0.1, R * 0.04, -0.15, 0, 7); ctx.fill();
     ctx.restore();
+    // ateş böceği: arkada nabız gibi parlayan karın ucu
+    if (st.glow) {
+      const pulse = 0.55 + 0.45 * Math.sin(t * 4);
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      const gg = ctx.createRadialGradient(-R * 0.95, 0, 0, -R * 0.95, 0, R * 1.6 * (0.7 + pulse * 0.5));
+      gg.addColorStop(0, `rgba(230,255,120,${0.9 * pulse})`); gg.addColorStop(1, 'rgba(200,255,80,0)');
+      ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(-R * 0.95, 0, R * 1.8, 0, 7); ctx.fill(); ctx.restore();
+      ctx.fillStyle = `rgba(240,255,170,${0.6 + pulse * 0.4})`; ctx.beginPath(); ctx.ellipse(-R * 0.85, 0, R * 0.32, R * 0.42, 0, 0, 7); ctx.fill();
+    }
+    // bokböceği: yanardöner parlaklık
+    if (st.irid) {
+      ctx.save(); bodyPath(); ctx.clip(); ctx.globalCompositeOperation = 'lighter';
+      const ig = ctx.createLinearGradient(ex - R, -R, ex + R, R);
+      const h = (t * 40) % 360;
+      ig.addColorStop(0, `hsla(${h},90%,60%,0)`); ig.addColorStop(0.5, `hsla(${(h + 120) % 360},90%,60%,0.35)`); ig.addColorStop(1, `hsla(${(h + 240) % 360},90%,60%,0)`);
+      ctx.fillStyle = ig; ctx.fillRect(-R * 2, -R * 2, R * 4, R * 4); ctx.restore();
+    }
     // orta dikiş ve dış hat
     ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = Math.max(1, R * 0.05);
     ctx.beginPath(); ctx.moveTo(ex + eRx * 0.92, 0); ctx.lineTo(ex - eRx, 0); ctx.stroke();
@@ -423,6 +548,79 @@
     ctx.restore();
   }
 
+  function drawSpider(x, y, R, ang, t, st, boss) {
+    ctx.save(); ctx.translate(x, y);
+    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(R * 0.15, R * 0.3, R * 1.5, R * 1.2, ang, 0, 7); ctx.fill();
+    ctx.rotate(ang);
+    if (boss) {
+      const g0 = ctx.createRadialGradient(0, 0, R * 0.5, 0, 0, R * 2.4);
+      g0.addColorStop(0, 'rgba(255,90,40,0.4)'); g0.addColorStop(1, 'rgba(255,90,40,0)');
+      ctx.fillStyle = g0; ctx.beginPath(); ctx.arc(0, 0, R * 2.4, 0, 7); ctx.fill();
+    }
+    const lw = Math.max(1, R * 0.1);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // 8 uzun, kıllı bacak
+    for (let i = 0; i < 4; i++) for (const side of [-1, 1]) {
+      // Bacaklar öne-yana-arkaya yelpaze gibi açılır; yürürken hafifçe salınır.
+      const ph = Math.sin(t * 14 + i * 1.6 + (side > 0 ? Math.PI : 0));
+      const da = side * (0.6 + i * 0.6 + ph * 0.12), bx = R * 0.4, by = side * R * 0.12;
+      const kx = bx + Math.cos(da - side * 0.25) * R * 1.05, ky = by + Math.sin(da - side * 0.25) * R * 1.05;
+      const fx = bx + Math.cos(da + side * 0.12) * R * 1.95, fy = by + Math.sin(da + side * 0.12) * R * 1.95;
+      ctx.strokeStyle = st.leg; ctx.lineWidth = lw * 1.5;
+      ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(kx, ky); ctx.stroke();
+      ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(kx, ky); ctx.lineTo(fx, fy); ctx.stroke();
+      ctx.strokeStyle = shade(st.body[0], 0.15); ctx.lineWidth = Math.max(1, lw * 0.3);
+      for (let h = 0.25; h < 0.9; h += 0.3) {
+        const hx = kx + (fx - kx) * h, hy = ky + (fy - ky) * h;
+        ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + (fy - ky) * 0.08, hy - (fx - kx) * 0.08); ctx.stroke();
+      }
+      ctx.fillStyle = shade(st.leg, 0.25); ctx.beginPath(); ctx.arc(kx, ky, lw * 0.85, 0, 7); ctx.fill();
+    }
+    // karın
+    const ag = ctx.createRadialGradient(-R * 0.55, -R * 0.3, R * 0.05, -R * 0.7, 0, R * 1.05);
+    ag.addColorStop(0, shade(st.body[0], 0.35)); ag.addColorStop(0.5, st.body[0]); ag.addColorStop(1, st.body[1]);
+    ctx.fillStyle = ag; ctx.beginPath(); ctx.ellipse(-R * 0.7, 0, R * 0.95, R * 0.78, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = st.marks;
+    ctx.beginPath(); ctx.moveTo(-R * 0.3, 0); ctx.lineTo(-R * 0.6, -R * 0.22); ctx.lineTo(-R * 0.9, 0); ctx.lineTo(-R * 0.6, R * 0.22); ctx.fill();
+    for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(-R * (1.05 + i * 0.18), 0, R * (0.08 - i * 0.015), 0, 7); ctx.fill(); }
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = Math.max(1, R * 0.03);
+    for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; ctx.beginPath(); ctx.moveTo(-R * 0.7 + Math.cos(a) * R * 0.9, Math.sin(a) * R * 0.72); ctx.lineTo(-R * 0.7 + Math.cos(a) * R * 1.02, Math.sin(a) * R * 0.82); ctx.stroke(); }
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.ellipse(-R * 0.55, -R * 0.42, R * 0.35, R * 0.12, -0.2, 0, 7); ctx.fill();
+    // baş-göğüs
+    const cg = ctx.createRadialGradient(R * 0.4, -R * 0.15, R * 0.05, R * 0.4, 0, R * 0.55);
+    cg.addColorStop(0, shade(st.head, 0.4)); cg.addColorStop(1, st.head);
+    ctx.fillStyle = cg; ctx.beginPath(); ctx.ellipse(R * 0.42, 0, R * 0.5, R * 0.45, 0, 0, 7); ctx.fill();
+    // zehir dişleri
+    ctx.fillStyle = shade(st.head, -0.4);
+    for (const side of [-1, 1]) { ctx.beginPath(); ctx.moveTo(R * 0.85, side * R * 0.08); ctx.quadraticCurveTo(R * 1.15, side * R * 0.2, R * 1.05, side * R * 0.02); ctx.lineTo(R * 0.9, side * R * 0.02); ctx.fill(); }
+    // 8 parlak göz
+    [[0.72, 0.1, 0.09], [0.72, -0.1, 0.09], [0.62, 0.22, 0.06], [0.62, -0.22, 0.06], [0.82, 0.05, 0.05], [0.82, -0.05, 0.05], [0.55, 0.12, 0.04], [0.55, -0.12, 0.04]].forEach(([a, b, s]) => {
+      ctx.fillStyle = boss ? '#ff2a2a' : '#0a0a0a'; ctx.beginPath(); ctx.arc(R * a, R * b, R * s, 0, 7); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.beginPath(); ctx.arc(R * a + R * s * 0.3, R * b - R * s * 0.3, R * s * 0.35, 0, 7); ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  function drawPowerup(u) {
+    const P = POWERS[u.type], x = (u.x + 0.5) * cell, y = (u.y + 0.5) * cell, R = cell * 3.4;
+    if (u.life < 3 && Math.floor(time * 8) % 2) return;
+    const bob = Math.sin(time * 4 + u.x) * cell * 0.4;
+    ctx.save(); ctx.translate(x, y + bob);
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, R * 1.8);
+    g.addColorStop(0, P.color + 'aa'); g.addColorStop(1, P.color + '00');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, R * 1.8, 0, 7); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.rotate(time * 1.5);
+    ctx.strokeStyle = P.color; ctx.lineWidth = cell * 0.3; ctx.setLineDash([cell * 0.8, cell * 0.5]);
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+    ctx.rotate(-time * 1.5);
+    ctx.fillStyle = 'rgba(15,18,40,0.85)'; ctx.beginPath(); ctx.arc(0, 0, R * 0.85, 0, 7); ctx.fill();
+    ctx.font = `${Math.round(R * 1.1)}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(P.icon, 0, R * 0.06);
+    ctx.restore();
+  }
+
   function render(dt) {
     const W = cv.width, H = cv.height;
     ctx.clearRect(0, 0, W, H);
@@ -441,7 +639,19 @@
       ctx.stroke(); ctx.restore();
     }
 
-    for (const e of enemies) drawBug(e.x * cell, e.y * cell, e.r * cell, Math.atan2(e.vy, e.vx), time + e.ph, e.style, e.boss);
+    for (const u of powerups) drawPowerup(u);
+
+    const frozen = fx.freeze > 0;
+    for (const e of enemies) {
+      const et = frozen ? e.ph : time + e.ph, ex = e.x * cell, ey = e.y * cell, R = e.r * cell, a = Math.atan2(e.vy, e.vx);
+      (e.K.shape === 'spider' ? drawSpider : drawBug)(ex, ey, R, a, et, e.style, e.boss);
+      if (frozen) {
+        ctx.save(); ctx.fillStyle = 'rgba(160,230,255,0.45)'; ctx.strokeStyle = 'rgba(220,250,255,0.9)'; ctx.lineWidth = Math.max(1, cell * 0.25);
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) { const aa = i / 6 * Math.PI * 2 + 0.3; ctx.lineTo(ex + Math.cos(aa) * R * 1.5, ey + Math.sin(aa) * R * 1.3); }
+        ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+      }
+    }
 
     for (const s of sparx) {
       const x = (s.x + 0.5) * cell, y = (s.y + 0.5) * cell, r = cell * (1.6 + Math.sin(time * 20) * 0.4);
@@ -457,7 +667,11 @@
         ctx.save(); ctx.shadowColor = '#7df9ff'; ctx.shadowBlur = cell * 3;
         ctx.strokeStyle = 'rgba(125,249,255,0.7)'; ctx.lineWidth = cell * 0.35;
         ctx.beginPath(); ctx.arc(x, y, r * (1.5 + Math.sin(time * 6) * 0.25), 0, 7); ctx.stroke();
-        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y); ctx.fill();
+        ctx.fillStyle = fx.speed > 0 ? '#ffd166' : '#fff'; ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y); ctx.fill();
+        if (fx.shield > 0) {
+          ctx.strokeStyle = `rgba(179,136,255,${0.6 + Math.sin(time * 10) * 0.3})`; ctx.shadowColor = '#b388ff'; ctx.lineWidth = cell * 0.5;
+          ctx.beginPath(); ctx.arc(x, y, r * 2.6, 0, 7); ctx.stroke();
+        }
         ctx.restore();
       }
     }
@@ -474,10 +688,10 @@
     ctx.globalAlpha = 1;
   }
 
-  let last = performance.now();
+  let last = performance.now(), hudT = 0;
   function loop(now) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
-    if (state === 'play') update(dt); else time += dt;
+    if (state === 'play') { update(dt); hudT -= dt; if (hudT <= 0) { hudT = 0.25; updateHud(); } } else time += dt;
     render(dt);
     requestAnimationFrame(loop);
   }
@@ -535,6 +749,7 @@
     $('#hudPct').textContent = `%${pct.toFixed(0)} / %${level.target}`;
     $('#bar').style.width = Math.min(100, pct / level.target * 100) + '%';
     $('#hudLives').textContent = '❤'.repeat(Math.max(0, lives)) + '♡'.repeat(Math.max(0, 3 - lives));
+    $('#hudFx').textContent = Object.keys(fx).filter(k => fx[k] > 0).map(k => POWERS[k].icon + Math.ceil(fx[k])).join(' ');
     $('#hudBugs').textContent = '🐞 ' + enemies.length;
     $('#hudScore').textContent = score.toLocaleString('tr-TR');
   }
@@ -543,8 +758,8 @@
     const last = lvIdx === LEVELS.length - 1;
     if (kind === 'win') {
       $('#ovTitle').textContent = last ? '🏆 Tüm bölümler tamamlandı!' : '🎉 Bölüm tamamlandı!';
-      $('#ovStars').textContent = '★'.repeat(lives) + '☆'.repeat(3 - lives);
-      $('#ovText').textContent = `${level.name} açıldı. Puan: ${score.toLocaleString('tr-TR')}`;
+      $('#ovStars').textContent = '★'.repeat(Math.min(3, lives)) + '☆'.repeat(Math.max(0, 3 - lives));
+      $('#ovText').textContent = `${level.name} manzarası ortaya çıktı! Puan: ${score.toLocaleString('tr-TR')}`;
       $('#ovNext').hidden = last; $('#ovRetry').hidden = true;
     } else {
       $('#ovTitle').textContent = '💥 Oyun bitti';
@@ -567,9 +782,9 @@
     const g = $('#levelGrid'); g.innerHTML = '';
     LEVELS.forEach((L, i) => {
       const b = document.createElement('button'); b.className = 'lv' + (i >= unlocked ? ' locked' : '');
-      const th = customImg ? null : Scenes.draw(i, 240, 150);
-      if (th) b.appendChild(th);
-      else { const im = new Image(); im.src = customImg.src; b.appendChild(im); }
+      const im = new Image(); im.loading = 'lazy'; im.alt = '';
+      im.src = customImg ? customImg.src : `assets/bg/thumbs/${L.img}.jpg`;
+      b.appendChild(im);
       const s = document.createElement('span'); s.textContent = i >= unlocked ? '🔒 ' + (i + 1) : `${i + 1}. ${L.name}`; b.appendChild(s);
       b.onclick = () => { if (i < unlocked) { score = 0; startLevel(i); } };
       g.appendChild(b);
@@ -585,7 +800,21 @@
   });
   $('#bgClear').onclick = () => { customImg = null; $('#customBox').classList.remove('has'); buildMenu(); };
 
-  if (location.search.includes('debug')) window.dsDebug = { win: () => state === 'play' && win() };
+  if (location.search.includes('debug')) window.dsDebug = {
+    win: () => state === 'play' && win(),
+    power: type => { spawnPowerup(); if (type && powerups.length) powerups[powerups.length - 1].type = type; return powerups.map(u => u.type); },
+    take: type => { const u = { x: player.x, y: player.y, type, life: 9 }; powerups.push(u); collect(u); },
+  };
+
+  fetch('assets/bg/credits.json').then(r => r.json()).then(list => {
+    const ul = $('#creditList');
+    list.forEach((c, i) => {
+      const li = document.createElement('li'), a = document.createElement('a');
+      a.href = c.source; a.target = '_blank'; a.rel = 'noopener'; a.textContent = c.title;
+      li.append(`${i + 1}. ${LEVELS[i] ? LEVELS[i].name : ''}: `, a, ` · ${c.artist} · ${c.license}`);
+      ul.appendChild(li);
+    });
+  }).catch(() => {});
 
   buildMenu();
   requestAnimationFrame(loop);
